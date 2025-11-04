@@ -1,0 +1,7 @@
+# Example sync configuration
+
+database_id: "<your-database-id>"
+checkpoint_file: .notion/state.json
+schedule: "*/10 * * * *" # every 10 minutes
+conflict_policy: prefer_remote # prefer_newest | prefer_remote | fail
+

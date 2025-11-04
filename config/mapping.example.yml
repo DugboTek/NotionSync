@@ -1,0 +1,21 @@
+# Example mapping configuration for a Notion database
+# Maps domain fields to Notion properties
+
+title:
+  type: title
+  path: Title
+fields:
+  status:
+    type: select
+    path: Status
+    map:
+      open: Open
+      in_progress: In Progress
+      done: Done
+  tags:
+    type: multi_select
+    path: Tags
+  due:
+    type: date
+    path: Due
+
