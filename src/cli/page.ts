@@ -140,4 +140,72 @@ export function registerPageCommands(program: Command, logger: Logger) {
         logger.info({ id: pageData.id, title }, 'Page info');
       }
     });
+
+  page
+    .command('archive')
+    .requiredOption('--id <pageId>', 'Page ID')
+    .option('--json', 'Output JSON')
+    .description('Archive (delete) a page')
+    .action(async (opts) => {
+      const env = loadEnv(true);
+      if (!('NOTION_TOKEN' in env) || !env.NOTION_TOKEN) {
+        logger.error('NOTION_TOKEN is not set. See .env.example');
+        process.exitCode = 1;
+        return;
+      }
+      const { client, call } = createNotionClient({
+        auth: env.NOTION_TOKEN,
+        notionVersion: env.NOTION_VERSION,
+        baseUrl: env.NOTION_API_BASE,
+        logger,
+      });
+
+      // Get page info first for logging
+      const pageData = await call(() => client.pages.retrieve({ page_id: opts.id }));
+      const titleProp = Object.entries((pageData as any).properties).find(([, v]: any) => v?.type === 'title');
+      const title = titleProp ? (titleProp[1] as any).title?.map((t: any) => t.plain_text).join('') : 'Untitled';
+
+      // Archive the page
+      const updated = await call(() => client.pages.update({ page_id: opts.id, archived: true }));
+
+      if (opts.json) {
+        console.log(JSON.stringify({ success: true, id: opts.id, title, archived: true }, null, 2));
+      } else {
+        logger.info({ id: opts.id, title }, 'Page archived');
+      }
+    });
+
+  page
+    .command('restore')
+    .requiredOption('--id <pageId>', 'Page ID')
+    .option('--json', 'Output JSON')
+    .description('Restore an archived page')
+    .action(async (opts) => {
+      const env = loadEnv(true);
+      if (!('NOTION_TOKEN' in env) || !env.NOTION_TOKEN) {
+        logger.error('NOTION_TOKEN is not set. See .env.example');
+        process.exitCode = 1;
+        return;
+      }
+      const { client, call } = createNotionClient({
+        auth: env.NOTION_TOKEN,
+        notionVersion: env.NOTION_VERSION,
+        baseUrl: env.NOTION_API_BASE,
+        logger,
+      });
+
+      // Get page info first for logging
+      const pageData = await call(() => client.pages.retrieve({ page_id: opts.id }));
+      const titleProp = Object.entries((pageData as any).properties).find(([, v]: any) => v?.type === 'title');
+      const title = titleProp ? (titleProp[1] as any).title?.map((t: any) => t.plain_text).join('') : 'Untitled';
+
+      // Restore the page
+      const updated = await call(() => client.pages.update({ page_id: opts.id, archived: false }));
+
+      if (opts.json) {
+        console.log(JSON.stringify({ success: true, id: opts.id, title, archived: false }, null, 2));
+      } else {
+        logger.info({ id: opts.id, title }, 'Page restored');
+      }
+    });
 }
